@@ -1,0 +1,15 @@
+node_modules
+dist
+.next
+.git
+.gitignore
+.env
+.env.local
+coverage
+documents
+_bmad
+.agent
+.kiro
+.superpowers
+.husky
+*.md
