@@ -12,8 +12,8 @@ COPY packages/shared-types/ ./packages/shared-types/
 # Install dependencies
 RUN npm ci --workspace=@prodigy/api --workspace=@prodigy/shared-types --include-workspace-root
 
-# Build the API
-RUN npm run build -w @prodigy/api
+# Build shared-types first, then the API
+RUN npm run build -w @prodigy/shared-types && npm run build -w @prodigy/api
 
 EXPOSE 3001
 
