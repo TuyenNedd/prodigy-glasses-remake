@@ -1,0 +1,9 @@
+{
+  "name": "@prodigy/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'TODO: Next.js build'",
+    "dev": "echo 'TODO: Next.js dev'"
+  }
+}

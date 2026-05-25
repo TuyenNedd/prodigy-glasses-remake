@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+out/
+
+# Coverage
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# BMAD internal/cache
+_bmad/
+
+# Kiro IDE settings (personal)
+.kiro/
+
+# Agent skills/config
+.agent/
+
+# Superpower Agent skills
+.superpowers/
+
+# BMad skills lock (machine-specific)
+skills-lock.json
+
+# Superseded draft (kept in git history only)
+migration-draft-plan.md
