@@ -1,6 +1,6 @@
 # Story 1.2: NestJS API Bootstrap with ConfigModule + Health Endpoint
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

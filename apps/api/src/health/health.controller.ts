@@ -1,5 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, HttpCode, HttpException, HttpStatus } from '@nestjs/common';
 
 interface HealthCheckResult {
   status: 'ok' | 'error';
@@ -14,7 +13,7 @@ interface HealthCheckResult {
 export class HealthController {
   @Get()
   @HttpCode(HttpStatus.OK)
-  check(@Res() res: Response): void {
+  check(): HealthCheckResult {
     // Stub checks — real implementations come in Story 1.3 (Docker), 1.4 (TypeORM), 1.7 (Redis)
     const checks = {
       db: this.checkDb(),
@@ -23,13 +22,12 @@ export class HealthController {
     };
 
     const allUp = Object.values(checks).every((v) => v === 'up');
-    const result: HealthCheckResult = {
-      status: allUp ? 'ok' : 'error',
-      checks,
-    };
 
-    const statusCode = allUp ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
-    res.status(statusCode).json(result);
+    if (!allUp) {
+      throw new HttpException({ status: 'error', checks }, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    return { status: 'ok', checks };
   }
 
   private checkDb(): 'up' | 'down' {
