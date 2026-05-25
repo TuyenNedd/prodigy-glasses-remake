@@ -43,7 +43,7 @@ development_status:
   1-1-monorepo-scaffold-with-npm-workspaces: done
   1-2-nestjs-api-bootstrap-with-configmodule-health-endpoint: done
   1-3-docker-compose-stack: done
-  1-4-typeorm-data-source-initial-migrations: backlog
+  1-4-typeorm-data-source-initial-migrations: ready-for-dev
   1-5-nextjs-app-router-init-tailwind-shadcn-setup: backlog
   1-6-shared-types-package-ci-baseline: backlog
   1-7-opentelemetry-redis-module-bootstrap: backlog
