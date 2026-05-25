@@ -1,4 +1,6 @@
-import { Controller, Get, HttpCode, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 interface HealthCheckResult {
   status: 'ok' | 'error';
@@ -11,13 +13,13 @@ interface HealthCheckResult {
 
 @Controller('health')
 export class HealthController {
+  constructor(@InjectRedis() private readonly redis: Redis) {}
+
   @Get()
-  @HttpCode(HttpStatus.OK)
-  check(): HealthCheckResult {
-    // Stub checks — real implementations come in Story 1.3 (Docker), 1.4 (TypeORM), 1.7 (Redis)
+  async check(): Promise<HealthCheckResult> {
     const checks = {
       db: this.checkDb(),
-      redis: this.checkRedis(),
+      redis: await this.checkRedis(),
       queue: this.checkQueue(),
     };
 
@@ -31,13 +33,17 @@ export class HealthController {
   }
 
   private checkDb(): 'up' | 'down' {
-    // Stub: returns 'up' until TypeORM is connected (Story 1.4)
+    // Stub: returns 'up' until DatabaseModule integrated into health
     return 'up';
   }
 
-  private checkRedis(): 'up' | 'down' {
-    // Stub: returns 'up' until Redis module is connected (Story 1.7)
-    return 'up';
+  private async checkRedis(): Promise<'up' | 'down'> {
+    try {
+      const pong = await this.redis.ping();
+      return pong === 'PONG' ? 'up' : 'down';
+    } catch {
+      return 'down';
+    }
   }
 
   private checkQueue(): 'up' | 'down' {

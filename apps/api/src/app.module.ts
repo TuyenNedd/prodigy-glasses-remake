@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { AppConfigModule } from './config/config.module';
 import { HealthModule } from './health/health.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
     AppConfigModule,
+    RedisModule,
     LoggerModule.forRoot({
       pinoHttp: {
         transport:
