@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Lint + Typecheck + Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck (shared-types)
+        run: npx tsc --noEmit -p packages/shared-types/tsconfig.json
+
+      - name: Build API
+        run: npm run build -w @prodigy/api
+
+      - name: Build Web
+        run: npm run build -w @prodigy/web
