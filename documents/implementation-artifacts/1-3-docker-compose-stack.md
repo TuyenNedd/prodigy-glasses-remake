@@ -1,6 +1,6 @@
 # Story 1.3: Docker Compose Stack (MySQL + Redis + Jaeger + Mailhog)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
