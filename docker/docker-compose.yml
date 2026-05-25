@@ -1,0 +1,95 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: prodigy-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-prodigy_secret}
+      MYSQL_DATABASE: ${DB_DATABASE:-prodigy_glasses}
+      MYSQL_USER: ${DB_USERNAME:-prodigy}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-prodigy_secret}
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - prodigy-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: prodigy-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - prodigy-net
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: prodigy-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: 'true'
+    ports:
+      - '16686:16686' # Jaeger UI
+      - '4317:4317' # OTLP gRPC
+      - '4318:4318' # OTLP HTTP
+    networks:
+      - prodigy-net
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: prodigy-mailhog
+    restart: unless-stopped
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
+    networks:
+      - prodigy-net
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: prodigy-api
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      PORT: 3001
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: ${DB_USERNAME:-prodigy}
+      DB_PASSWORD: ${DB_PASSWORD:-prodigy_secret}
+      DB_DATABASE: ${DB_DATABASE:-prodigy_glasses}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - prodigy-net
+
+volumes:
+  mysql_data:
+
+networks:
+  prodigy-net:
+    driver: bridge

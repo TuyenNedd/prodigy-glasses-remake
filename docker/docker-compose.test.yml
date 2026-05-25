@@ -1,0 +1,33 @@
+# Ephemeral test stack — no volumes, alternate ports
+# Usage: docker compose -f docker/docker-compose.test.yml up -d
+
+services:
+  mysql-test:
+    image: mysql:8.0
+    container_name: prodigy-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: test_secret
+      MYSQL_DATABASE: prodigy_glasses_test
+      MYSQL_USER: prodigy_test
+      MYSQL_PASSWORD: test_secret
+    ports:
+      - '3307:3306'
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    tmpfs:
+      - /var/lib/mysql
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: prodigy-redis-test
+    ports:
+      - '6380:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 2s
+      retries: 5
