@@ -41,12 +41,13 @@ curl http://localhost:3001/api/health
 
 ### Available Services
 
-| Service      | URL                            |
-| ------------ | ------------------------------ |
-| API          | http://localhost:3001/api      |
-| Swagger Docs | http://localhost:3001/api/docs |
-| Jaeger UI    | http://localhost:16686         |
-| Mailhog UI   | http://localhost:8025          |
+| Service        | URL                            |
+| -------------- | ------------------------------ |
+| Web (Frontend) | http://localhost:3000          |
+| API (Backend)  | http://localhost:3001/api      |
+| Swagger Docs   | http://localhost:3001/api/docs |
+| Jaeger UI      | http://localhost:16686         |
+| Mailhog UI     | http://localhost:8025          |
 
 ### Stop
 
@@ -60,7 +61,7 @@ docker compose -f docker/docker-compose.yml down
 prodigy-glasses-remake/
 ├── apps/
 │   ├── api/              # NestJS modular monolith
-│   └── web/              # Next.js App Router (coming soon)
+│   └── web/              # Next.js App Router
 ├── packages/
 │   └── shared-types/     # Zod schemas + TS types (FE↔BE)
 ├── docker/
@@ -79,6 +80,15 @@ npm install
 
 # Run API in watch mode (without Docker)
 npm run dev -w @prodigy/api
+
+# Run Web (Next.js) in dev mode
+npm run dev -w @prodigy/web
+
+# Run database migrations
+npm run migration:run -w @prodigy/api
+
+# Revert last migration
+npm run migration:revert -w @prodigy/api
 
 # Lint
 npm run lint
