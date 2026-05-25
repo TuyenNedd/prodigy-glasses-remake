@@ -1,6 +1,6 @@
 # Story 2.1 — User Entity + Sign-Up Endpoint
 
-## Status: ready-for-dev
+## Status: done
 
 ## Story
 
@@ -268,16 +268,16 @@ For 409 conflict:
 
 ## Definition of Done
 
-- [ ] User entity created with TypeORM decorators matching schema
-- [ ] RefreshToken entity created with TypeORM decorators
-- [ ] AuthModule with controller, service registered in AppModule
-- [ ] DatabaseModule imported in AppModule
-- [ ] POST /api/auth/sign-up returns 201 with user + accessToken
-- [ ] Password never in response (select: false + DTO)
-- [ ] Email validation → 400, password < 8 → 400, duplicate → 409
-- [ ] bcrypt hash with cost ≥ 10
-- [ ] Refresh token set via HttpOnly Secure cookie at Path=/api/auth
-- [ ] No refresh token in JSON body
-- [ ] JWT env vars added to env.schema.ts
-- [ ] @nestjs/jwt and @nestjs/passport added to dependencies
-- [ ] Code compiles without errors (`npm run build` in apps/api)
+- [x] User entity created with TypeORM decorators matching schema
+- [x] RefreshToken entity created with TypeORM decorators
+- [x] AuthModule with controller, service registered in AppModule
+- [x] DatabaseModule imported in AppModule
+- [x] POST /api/auth/sign-up returns 201 with user + accessToken
+- [x] Password never in response (select: false + DTO)
+- [x] Email validation → 400, password < 8 → 400, duplicate → 409
+- [x] bcrypt hash with cost ≥ 10
+- [x] Refresh token set via HttpOnly Secure cookie at Path=/api/auth
+- [x] No refresh token in JSON body
+- [x] JWT env vars added to env.schema.ts
+- [x] @nestjs/jwt and @nestjs/passport added to dependencies
+- [x] Code compiles without errors (`npm run build` in apps/api)

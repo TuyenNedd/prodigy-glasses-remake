@@ -51,7 +51,7 @@ development_status:
 
   # === EPIC 2: Auth + Catalog Read (Week 2) ===
   epic-2: in-progress
-  2-1-user-entity-sign-up-endpoint: in-progress
+  2-1-user-entity-sign-up-endpoint: done
   2-2-sign-in-jwt-access-refresh-token-pair: backlog
   2-3-refresh-token-rotation-reuse-detection: backlog
   2-4-sign-out-jwt-blacklist-rbac-guards: backlog
