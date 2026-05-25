@@ -46,7 +46,7 @@ development_status:
   1-4-typeorm-data-source-initial-migrations: done
   1-5-nextjs-app-router-init-tailwind-shadcn-setup: done
   1-6-shared-types-package-ci-baseline: done
-  1-7-opentelemetry-redis-module-bootstrap: ready-for-dev
+  1-7-opentelemetry-redis-module-bootstrap: done
   epic-1-retrospective: optional
 
   # === EPIC 2: Auth + Catalog Read (Week 2) ===
