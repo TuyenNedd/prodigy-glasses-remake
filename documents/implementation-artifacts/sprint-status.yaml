@@ -1,0 +1,106 @@
+# generated: 2026-05-25
+# last_updated: 2026-05-25
+# project: prodigy-glasses-remake
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: documents/implementation-artifacts
+#
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' when first story is created
+# - Stories worked sequentially by default (solo dev)
+# - Use bmad-create-story to prepare next story for implementation
+# - Use bmad-dev-story to implement a prepared story
+
+generated: 2026-05-25
+last_updated: 2026-05-25
+project: prodigy-glasses-remake
+project_key: NOKEY
+tracking_system: file-system
+story_location: documents/implementation-artifacts
+
+development_status:
+  # === EPIC 1: Foundation & CI Baseline (Week 1) ===
+  epic-1: in-progress
+  1-1-monorepo-scaffold-with-npm-workspaces: done
+  1-2-nestjs-api-bootstrap-with-configmodule-health-endpoint: backlog
+  1-3-docker-compose-stack: backlog
+  1-4-typeorm-data-source-initial-migrations: backlog
+  1-5-nextjs-app-router-init-tailwind-shadcn-setup: backlog
+  1-6-shared-types-package-ci-baseline: backlog
+  1-7-opentelemetry-redis-module-bootstrap: backlog
+  epic-1-retrospective: optional
+
+  # === EPIC 2: Auth + Catalog Read (Week 2) ===
+  epic-2: backlog
+  2-1-user-entity-sign-up-endpoint: backlog
+  2-2-sign-in-jwt-access-refresh-token-pair: backlog
+  2-3-refresh-token-rotation-reuse-detection: backlog
+  2-4-sign-out-jwt-blacklist-rbac-guards: backlog
+  2-5-get-me-update-profile: backlog
+  2-6-category-product-entities-seed-script: backlog
+  2-7-catalog-read-endpoints-with-cache-aside: backlog
+  2-8-frontend-auth-pages-server-actions: backlog
+  2-9-frontend-plp-page-rsc-client-filter: backlog
+  2-10-frontend-pdp-page-rsc-isr: backlog
+  epic-2-retrospective: optional
+
+  # === EPIC 3: Cart, Order, Payment & Email Queue (Week 3) ===
+  epic-3: backlog
+  3-1-cart-module-add-update-remove-get: backlog
+  3-2-checkout-preview-order-create-atomic-transaction: backlog
+  3-3-cancel-order-stock-restore: backlog
+  3-4-paypal-create-order-endpoint: backlog
+  3-5-paypal-webhook-receiver-signature-verification: backlog
+  3-6-webhook-idempotency-dedup-table: backlog
+  3-7-bullmq-email-queue-nodemailer-worker: backlog
+  3-8-frontend-cart-page-tanstack-query: backlog
+  3-9-frontend-checkout-page-rhf-zod-paypal: backlog
+  3-10-frontend-my-orders-order-detail-pages: backlog
+  epic-3-retrospective: optional
+
+  # === EPIC 4: Frontend Depth + Admin Module (Week 4) ===
+  epic-4: backlog
+  4-1-reviews-list-submit-verified-purchase-delete: backlog
+  4-2-admin-dashboard-kpi-endpoint: backlog
+  4-3-admin-user-management-crud-bulk: backlog
+  4-4-admin-product-management-crud-cache-invalidation: backlog
+  4-5-admin-category-management-crud-cascade-protection: backlog
+  4-6-admin-order-management-state-machine-mark-delivered: backlog
+  4-7-admin-comment-management-audit-trail: backlog
+  4-8-websocket-admin-gateway-realtime-new-orders-feed: backlog
+  4-9-frontend-admin-server-actions-for-forms: backlog
+  4-10-frontend-optimistic-updates: backlog
+  4-11-frontend-web-vitals-lighthouse-ci-integration: backlog
+  epic-4-retrospective: optional
+
+  # === EPIC 5: Tests, Observability, Docs & Polish (Week 5) ===
+  epic-5: backlog
+  5-1-unit-tests-auth-payment-services: backlog
+  5-2-unit-tests-catalog-order-notification-services: backlog
+  5-3-integration-tests-testcontainers-security-data-integrity: backlog
+  5-4-playwright-e2e-7-critical-flows: backlog
+  5-5-opentelemetry-instrumentation-jaeger-verification: backlog
+  5-6-adrs-architecture-diagrams: backlog
+  5-7-readme-portfolio-grade-animated-gifs: backlog
+  5-8-ci-finalization-quality-gates: backlog
+  5-9-final-polish-code-review-pass: backlog
+  epic-5-retrospective: optional
