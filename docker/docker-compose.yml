@@ -1,3 +1,5 @@
+name: prodigy-glasses
+
 services:
   mysql:
     image: mysql:8.0
