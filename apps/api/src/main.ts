@@ -4,6 +4,7 @@ import './observability/otel';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -14,6 +15,16 @@ async function bootstrap() {
 
   // Global prefix /api
   app.setGlobalPrefix('api');
+
+  // Cookie parser for refresh token cookies
+  app.use(cookieParser());
+
+  // CORS
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000').split(',');
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+  });
 
   // Swagger setup
   const swaggerConfig = new DocumentBuilder()
