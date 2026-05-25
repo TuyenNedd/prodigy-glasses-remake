@@ -45,7 +45,7 @@ development_status:
   1-3-docker-compose-stack: done
   1-4-typeorm-data-source-initial-migrations: done
   1-5-nextjs-app-router-init-tailwind-shadcn-setup: done
-  1-6-shared-types-package-ci-baseline: backlog
+  1-6-shared-types-package-ci-baseline: ready-for-dev
   1-7-opentelemetry-redis-module-bootstrap: backlog
   epic-1-retrospective: optional
 
