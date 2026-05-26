@@ -65,7 +65,7 @@ development_status:
 
   # === EPIC 3: Cart, Order, Payment & Email Queue (Week 3) ===
   epic-3: in-progress
-  3-1-cart-module-add-update-remove-get: in-progress
+  3-1-cart-module-add-update-remove-get: done
   3-2-checkout-preview-order-create-atomic-transaction: backlog
   3-3-cancel-order-stock-restore: backlog
   3-4-paypal-create-order-endpoint: backlog
