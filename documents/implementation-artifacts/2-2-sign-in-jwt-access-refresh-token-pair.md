@@ -1,6 +1,6 @@
 # Story 2.2 — Sign-in + JWT access/refresh token pair
 
-## Status: in-progress
+## Status: done
 
 ## Story
 
@@ -74,11 +74,11 @@
 
 ## Definition of Done
 
-- [ ] POST /api/auth/sign-in returns 200 with { user, accessToken } on valid credentials
-- [ ] Refresh token set via HttpOnly cookie (same as sign-up)
-- [ ] Wrong email → 401 invalid_credentials
-- [ ] Wrong password → 401 invalid_credentials (no enumeration)
-- [ ] Access token payload: { sub, role, jti, iat, exp } only
-- [ ] Refresh token persisted in DB with family_id
-- [ ] Rate limit: 10 req/min/IP on sign-in, 11th → 429
-- [ ] Code compiles and lint passes
+- [x] POST /api/auth/sign-in returns 200 with { user, accessToken } on valid credentials
+- [x] Refresh token set via HttpOnly cookie (same as sign-up)
+- [x] Wrong email → 401 invalid_credentials
+- [x] Wrong password → 401 invalid_credentials (no enumeration)
+- [x] Access token payload: { sub, role, jti, iat, exp } only
+- [x] Refresh token persisted in DB with family_id
+- [x] Rate limit: 10 req/min/IP on sign-in, 11th → 429
+- [x] Code compiles and lint passes
