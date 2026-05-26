@@ -1,6 +1,6 @@
 # Story 2.4 — Sign-out + JWT blacklist + RBAC guards
 
-## Status: in-progress
+## Status: done
 
 ## Story
 
