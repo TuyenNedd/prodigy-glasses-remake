@@ -1,6 +1,6 @@
 # Story 2.5 — Get me + update profile
 
-## Status: in-progress
+## Status: done
 
 ## Story
 
