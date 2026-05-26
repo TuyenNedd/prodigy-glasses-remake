@@ -2,36 +2,83 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  quality:
-    name: Lint + Typecheck + Build
+  # Detect which paths changed
+  changes:
+    name: Detect changes
     runs-on: ubuntu-latest
-
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      shared: ${{ steps.filter.outputs.shared }}
     steps:
       - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/shared-types/**'
+              - 'package-lock.json'
+            web:
+              - 'apps/web/**'
+              - 'packages/shared-types/**'
+              - 'package-lock.json'
+            shared:
+              - 'packages/shared-types/**'
 
+  # Always run: lint + format (fast, catches issues early)
+  quality:
+    name: Lint + Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-
       - run: npm ci
-
       - name: Format check
         run: npm run format:check
-
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck (shared-types)
+  # Build API only when API or shared-types changed
+  build-api:
+    name: Build API
+    needs: [changes, quality]
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck shared-types
         run: npx tsc --noEmit -p packages/shared-types/tsconfig.json
-
       - name: Build API
         run: npm run build -w @prodigy/api
 
+  # Build Web only when Web or shared-types changed
+  build-web:
+    name: Build Web
+    needs: [changes, quality]
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck shared-types
+        run: npx tsc --noEmit -p packages/shared-types/tsconfig.json
       - name: Build Web
         run: npm run build -w @prodigy/web
