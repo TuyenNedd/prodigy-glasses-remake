@@ -2,6 +2,8 @@ import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 
+import { Public } from '../modules/auth/decorators/public.decorator';
+
 interface HealthCheckResult {
   status: 'ok' | 'error';
   checks: {
@@ -15,6 +17,7 @@ interface HealthCheckResult {
 export class HealthController {
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
+  @Public()
   @Get()
   async check(): Promise<HealthCheckResult> {
     const checks = {

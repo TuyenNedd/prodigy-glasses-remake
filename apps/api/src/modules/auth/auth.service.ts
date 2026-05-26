@@ -8,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -31,6 +33,7 @@ export class AuthService {
     private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectRedis() private readonly redis: Redis,
   ) {}
 
   async signUp(dto: SignUpDto): Promise<{
@@ -261,6 +264,44 @@ export class AuthService {
     await this.refreshTokenRepository.save(newTokenEntity);
 
     return { accessToken, refreshToken };
+  }
+
+  async signOut(
+    accessJti: string,
+    userId: string,
+    refreshCookie: string | undefined,
+  ): Promise<void> {
+    // 1. Blacklist the access token JTI in Redis (TTL = 15min max access token life)
+    await this.redis.set(`auth:blacklist:${accessJti}`, '1', 'EX', 15 * 60);
+
+    // 2. Revoke entire refresh family if we have the cookie
+    if (refreshCookie) {
+      try {
+        const payload = this.jwtService.decode(refreshCookie) as {
+          jti?: string;
+          family_id?: string;
+        } | null;
+        if (payload?.jti) {
+          const tokenRecord = await this.refreshTokenRepository.findOne({
+            where: { id: payload.jti },
+          });
+          if (tokenRecord) {
+            await this.refreshTokenRepository.update(
+              { familyId: tokenRecord.familyId },
+              { status: RefreshTokenStatus.REVOKED },
+            );
+          }
+        }
+      } catch {
+        // Best-effort family revocation
+      }
+    } else {
+      // No cookie — revoke all active tokens for this user
+      await this.refreshTokenRepository.update(
+        { userId, status: RefreshTokenStatus.ACTIVE },
+        { status: RefreshTokenStatus.REVOKED },
+      );
+    }
   }
 
   private async revokeFamilyAndAudit(
