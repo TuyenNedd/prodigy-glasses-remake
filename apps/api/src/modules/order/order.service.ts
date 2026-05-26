@@ -303,4 +303,51 @@ export class OrderService {
       return order;
     });
   }
+
+  async getMyOrders(userId: string, query: { status?: string; page?: number; pageSize?: number }) {
+    const page = Math.max(1, query.page || 1);
+    const pageSize = Math.min(50, Math.max(1, query.pageSize || 10));
+
+    const qb = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.userId = :userId', { userId })
+      .orderBy('order.createdAt', 'DESC');
+
+    if (query.status) {
+      qb.andWhere('order.status = :status', { status: query.status });
+    }
+
+    const total = await qb.getCount();
+    const data = await qb
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getMany();
+
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  }
+
+  async getOrderDetail(orderId: string, userId: string) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: { items: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: 'Order not found',
+      });
+    }
+
+    if (order.userId !== userId) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: 'Forbidden',
+        message: 'Not your order',
+      });
+    }
+
+    return order;
+  }
 }
