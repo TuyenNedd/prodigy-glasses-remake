@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { AddToCartButton } from './AddToCartButton';
+import { AddToCartButton } from '@/components/public/add-to-cart-button/add-to-cart-button';
 
 export const revalidate = 60;
 

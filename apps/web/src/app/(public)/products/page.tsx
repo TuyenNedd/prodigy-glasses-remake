@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { apiFetch } from '@/lib/api-server';
-import { ProductCard } from '@/components/public/ProductCard';
-import { FilterSidebar } from '@/components/public/FilterSidebar';
-import { Pagination } from '@/components/public/Pagination';
+import { ProductCard } from '@/components/public/product-card/product-card';
+import { FilterSidebar } from '@/components/public/filter-sidebar/filter-sidebar';
+import { Pagination } from '@/components/public/pagination/pagination';
 
 interface Category {
   id: string;
