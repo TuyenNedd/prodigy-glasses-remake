@@ -17,6 +17,7 @@ import { User, UserRole } from './entities/user.entity';
 import { RefreshToken, RefreshTokenStatus } from './entities/refresh-token.entity';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 
 interface AuditContext {
@@ -96,6 +97,78 @@ export class AuthService {
       user: UserResponseDto.fromEntity(user),
       accessToken,
       refreshToken,
+    };
+  }
+
+  async getMe(userId: string): Promise<
+    UserResponseDto & {
+      phone: string | null;
+      address: string | null;
+      city: string | null;
+      avatar: string | null;
+    }
+  > {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'user_not_found',
+        message: 'User not found',
+      });
+    }
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      phone: user.phone,
+      address: user.address,
+      city: user.city,
+      avatar: user.avatar,
+    };
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<
+    UserResponseDto & {
+      phone: string | null;
+      address: string | null;
+      city: string | null;
+      avatar: string | null;
+    }
+  > {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'user_not_found',
+        message: 'User not found',
+      });
+    }
+
+    // Only update allowed fields — email and role are NOT updatable
+    if (dto.name !== undefined) user.name = dto.name;
+    if ('phone' in dto) user.phone = dto.phone === null ? null : (dto.phone ?? user.phone);
+    if ('address' in dto)
+      user.address = dto.address === null ? null : (dto.address ?? user.address);
+    if ('city' in dto) user.city = dto.city === null ? null : (dto.city ?? user.city);
+    if ('avatar' in dto) user.avatar = dto.avatar === null ? null : (dto.avatar ?? user.avatar);
+
+    await this.userRepository.save(user);
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      phone: user.phone,
+      address: user.address,
+      city: user.city,
+      avatar: user.avatar,
     };
   }
 

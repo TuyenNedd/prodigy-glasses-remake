@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Req,
   Res,
@@ -89,6 +90,16 @@ export class AuthController {
     this.setRefreshCookie(res, refreshToken);
 
     return { accessToken };
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ status: 200, description: 'User profile' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  async getMe(@Req() req: Request) {
+    const user = (req as unknown as { user: { id: string } }).user;
+    return this.authService.getMe(user.id);
   }
 
   @Post('sign-out')
