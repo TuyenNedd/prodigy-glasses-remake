@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Body,
+  Req,
   Res,
   UsePipes,
   HttpCode,
@@ -10,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 
 import { AuthService } from './auth.service';
@@ -63,6 +64,27 @@ export class AuthController {
     this.setRefreshCookie(res, refreshToken);
 
     return { user, accessToken };
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token using refresh cookie' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid/expired/reused refresh token' })
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ accessToken: string }> {
+    const refreshCookie = req.cookies?.refresh_token as string | undefined;
+
+    const { accessToken, refreshToken } = await this.authService.refresh(refreshCookie, {
+      ip: req.ip || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
+
+    this.setRefreshCookie(res, refreshToken);
+
+    return { accessToken };
   }
 
   private setRefreshCookie(res: Response, refreshToken: string): void {

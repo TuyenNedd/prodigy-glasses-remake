@@ -17,6 +17,11 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 
+interface AuditContext {
+  ip?: string;
+  userAgent?: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -132,6 +137,158 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async refresh(
+    refreshCookie: string | undefined,
+    audit: AuditContext,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    // Missing cookie
+    if (!refreshCookie) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'refresh_missing',
+        message: 'Refresh token cookie is missing',
+      });
+    }
+
+    // Verify JWT signature + decode
+    let payload: { sub: string; family_id: string; jti: string };
+    try {
+      payload = this.jwtService.verify(refreshCookie, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch (error: unknown) {
+      const isExpired = error instanceof Error && error.name === 'TokenExpiredError';
+      if (isExpired) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          error: 'Unauthorized',
+          code: 'refresh_expired',
+          message: 'Refresh token has expired',
+        });
+      }
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'refresh_invalid',
+        message: 'Invalid refresh token',
+      });
+    }
+
+    // Lookup token in DB
+    const tokenRecord = await this.refreshTokenRepository.findOne({
+      where: { id: payload.jti },
+    });
+
+    if (!tokenRecord) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'refresh_invalid',
+        message: 'Refresh token not found',
+      });
+    }
+
+    // REUSE DETECTION: if token is already rotated, revoke entire family
+    if (tokenRecord.status === RefreshTokenStatus.ROTATED) {
+      await this.revokeFamilyAndAudit(tokenRecord.familyId, tokenRecord.userId, audit);
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'refresh_reuse_detected',
+        message: 'Token reuse detected — entire family revoked',
+      });
+    }
+
+    // If token is revoked (family was already revoked)
+    if (tokenRecord.status === RefreshTokenStatus.REVOKED) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'family_revoked',
+        message: 'Token family has been revoked',
+      });
+    }
+
+    // Token is active — proceed with rotation
+    // Mark old token as rotated
+    tokenRecord.status = RefreshTokenStatus.ROTATED;
+    await this.refreshTokenRepository.save(tokenRecord);
+
+    // Generate new token pair (same family, parent = old jti)
+    const newAccessJti = crypto.randomUUID();
+    const newRefreshJti = crypto.randomUUID();
+
+    const accessToken = this.jwtService.sign(
+      {
+        sub: payload.sub,
+        role: (await this.userRepository.findOne({ where: { id: payload.sub } }))?.role || 'USER',
+        jti: newAccessJti,
+      },
+      {
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+        expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN', '15m'),
+      } as JwtSignOptions,
+    );
+
+    const refreshToken = this.jwtService.sign(
+      {
+        sub: payload.sub,
+        family_id: tokenRecord.familyId,
+        jti: newRefreshJti,
+      },
+      {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d'),
+      } as JwtSignOptions,
+    );
+
+    // Persist new refresh token
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const newTokenEntity = this.refreshTokenRepository.create({
+      id: newRefreshJti,
+      userId: payload.sub,
+      familyId: tokenRecord.familyId,
+      parentId: tokenRecord.id, // parent = old token jti
+      status: RefreshTokenStatus.ACTIVE,
+      expiresAt,
+    });
+
+    await this.refreshTokenRepository.save(newTokenEntity);
+
+    return { accessToken, refreshToken };
+  }
+
+  private async revokeFamilyAndAudit(
+    familyId: string,
+    userId: string,
+    audit: AuditContext,
+  ): Promise<void> {
+    // Revoke all tokens in the family
+    await this.refreshTokenRepository.update({ familyId }, { status: RefreshTokenStatus.REVOKED });
+
+    // Write audit log (best-effort, don't block on failure)
+    try {
+      const dataSource = this.refreshTokenRepository.manager.connection;
+      await dataSource.query(
+        `INSERT INTO audit_logs (id, event, actor_id, actor_role, target_type, target_id, payload, ip, user_agent, createdAt)
+         VALUES (?, 'refresh_reuse_detected', ?, 'SYSTEM', 'refresh_token_family', ?, ?, ?, ?, NOW())`,
+        [
+          crypto.randomUUID(),
+          userId,
+          familyId,
+          JSON.stringify({ family_id: familyId, user_id: userId }),
+          audit.ip || null,
+          audit.userAgent || null,
+        ],
+      );
+    } catch {
+      // Best-effort audit — don't fail the request
+    }
   }
 
   private async generateTokenPair(user: User): Promise<{
