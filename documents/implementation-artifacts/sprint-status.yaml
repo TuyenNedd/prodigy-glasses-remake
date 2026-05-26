@@ -59,7 +59,7 @@ development_status:
   2-6-category-product-entities-seed-script: done
   2-7-catalog-read-endpoints-with-cache-aside: done
   2-8-frontend-auth-pages-server-actions: done
-  2-9-frontend-plp-page-rsc-client-filter: in-progress
+  2-9-frontend-plp-page-rsc-client-filter: done
   2-10-frontend-pdp-page-rsc-isr: backlog
   epic-2-retrospective: optional
 
