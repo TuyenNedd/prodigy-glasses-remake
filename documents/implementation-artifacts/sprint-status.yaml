@@ -39,7 +39,7 @@ story_location: documents/implementation-artifacts
 
 development_status:
   # === EPIC 1: Foundation & CI Baseline (Week 1) ===
-  epic-1: in-progress
+  epic-1: done
   1-1-monorepo-scaffold-with-npm-workspaces: done
   1-2-nestjs-api-bootstrap-with-configmodule-health-endpoint: done
   1-3-docker-compose-stack: done
@@ -50,7 +50,7 @@ development_status:
   epic-1-retrospective: optional
 
   # === EPIC 2: Auth + Catalog Read (Week 2) ===
-  epic-2: in-progress
+  epic-2: done
   2-1-user-entity-sign-up-endpoint: done
   2-2-sign-in-jwt-access-refresh-token-pair: done
   2-3-refresh-token-rotation-reuse-detection: done
@@ -64,8 +64,8 @@ development_status:
   epic-2-retrospective: optional
 
   # === EPIC 3: Cart, Order, Payment & Email Queue (Week 3) ===
-  epic-3: backlog
-  3-1-cart-module-add-update-remove-get: backlog
+  epic-3: in-progress
+  3-1-cart-module-add-update-remove-get: in-progress
   3-2-checkout-preview-order-create-atomic-transaction: backlog
   3-3-cancel-order-stock-restore: backlog
   3-4-paypal-create-order-endpoint: backlog
