@@ -73,7 +73,7 @@ development_status:
   3-6-webhook-idempotency-dedup-table: done
   3-7-bullmq-email-queue-nodemailer-worker: done
   3-8-frontend-cart-page-tanstack-query: done
-  3-9-frontend-checkout-page-rhf-zod-paypal: backlog
+  3-9-frontend-checkout-page-rhf-zod-paypal: done
   3-10-frontend-my-orders-order-detail-pages: backlog
   epic-3-retrospective: optional
 
