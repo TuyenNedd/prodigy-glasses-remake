@@ -70,7 +70,7 @@ development_status:
   3-3-cancel-order-stock-restore: done
   3-4-paypal-create-order-endpoint: done
   3-5-paypal-webhook-receiver-signature-verification: done
-  3-6-webhook-idempotency-dedup-table: in-progress
+  3-6-webhook-idempotency-dedup-table: done
   3-7-bullmq-email-queue-nodemailer-worker: backlog
   3-8-frontend-cart-page-tanstack-query: backlog
   3-9-frontend-checkout-page-rhf-zod-paypal: backlog
