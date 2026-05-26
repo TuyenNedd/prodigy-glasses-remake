@@ -8,9 +8,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { Order, OrderStatus } from '../order/entities/order.entity';
+import { ProcessedWebhookEvent } from './entities/processed-webhook-event.entity';
 
 @Injectable()
 export class PaymentService {
@@ -18,6 +19,7 @@ export class PaymentService {
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     private readonly configService: ConfigService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createPaypalOrder(orderId: string, userId: string): Promise<{ paypalOrderId: string }> {
@@ -165,14 +167,39 @@ export class PaymentService {
       return { status: 'order_not_found' };
     }
 
-    // Mark as paid
-    order.isPaid = true;
-    order.paidAt = new Date();
-    order.status = OrderStatus.PAID;
-    await this.orderRepository.save(order);
+    // Idempotent processing: INSERT dedup + UPDATE order in same transaction
+    try {
+      await this.dataSource.transaction(async (manager) => {
+        // Insert into processed_webhook_events (unique constraint on event_id)
+        const dedupEntry = manager.create(ProcessedWebhookEvent, {
+          eventId: event.id,
+          orderId: order.id,
+          eventType: event.event_type,
+          payloadSummary: { paypal_order_id: paypalOrderId },
+        });
+        await manager.save(ProcessedWebhookEvent, dedupEntry);
 
-    logger.log(`Order ${order.id} marked as PAID via webhook`);
-    return { status: 'processed' };
+        // Mark order as paid
+        order.isPaid = true;
+        order.paidAt = new Date();
+        order.status = OrderStatus.PAID;
+        await manager.save(Order, order);
+      });
+
+      logger.log(`Order ${order.id} marked as PAID via webhook (event ${event.id})`);
+      return { status: 'processed' };
+    } catch (error: unknown) {
+      // Duplicate event_id → unique violation → already processed
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        (error as { code: string }).code === 'ER_DUP_ENTRY'
+      ) {
+        logger.log(`Webhook event ${event.id} already processed (idempotent skip)`);
+        return { status: 'already_processed' };
+      }
+      throw error;
+    }
   }
 
   private async verifyWebhookSignature(
