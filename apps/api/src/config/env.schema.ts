@@ -33,6 +33,10 @@ export const envSchema = z.object({
 
   // CORS
   CORS_ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+
+  // SMTP (Mailhog in dev)
+  SMTP_HOST: z.string().default('localhost'),
+  SMTP_PORT: z.coerce.number().default(1025),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
