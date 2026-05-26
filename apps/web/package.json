@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@paypal/react-paypal-js": "^9.2.0",
     "@prodigy/shared-types": "^0.0.0",
     "@tailwindcss/postcss": "^4.3.0",
     "@tanstack/react-query": "^5.100.14",
