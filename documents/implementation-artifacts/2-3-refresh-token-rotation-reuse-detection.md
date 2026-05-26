@@ -1,6 +1,6 @@
 # Story 2.3 — Refresh token rotation + reuse detection
 
-## Status: in-progress
+## Status: done
 
 ## Story
 
@@ -45,12 +45,12 @@
 
 ## Definition of Done
 
-- [ ] POST /api/auth/refresh returns 200 with { accessToken } + new refresh cookie
-- [ ] Old refresh token status updated to 'rotated' in DB
-- [ ] New token has parent_id = old token jti
-- [ ] Replaying rotated token revokes entire family + returns 401
-- [ ] After family revoke, all tokens in family return 401
-- [ ] Audit log entry on reuse detection
-- [ ] Expired token → 401 refresh_expired
-- [ ] Missing cookie → 401 refresh_missing
-- [ ] Code compiles and lint passes
+- [x] POST /api/auth/refresh returns 200 with { accessToken } + new refresh cookie
+- [x] Old refresh token status updated to 'rotated' in DB
+- [x] New token has parent_id = old token jti
+- [x] Replaying rotated token revokes entire family + returns 401
+- [x] After family revoke, all tokens in family return 401
+- [x] Audit log entry on reuse detection
+- [x] Expired token → 401 refresh_expired
+- [x] Missing cookie → 401 refresh_missing
+- [x] Code compiles and lint passes
