@@ -1,10 +1,21 @@
-import { Controller, Post, Body, Res, UsePipes, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  UsePipes,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 
 import { AuthService } from './auth.service';
 import { SignUpDto, signUpSchema } from './dto/sign-up.dto';
+import { SignInDto, signInSchema } from './dto/sign-in.dto';
 import { SignUpResponseDto } from './dto/user-response.dto';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
 
@@ -29,7 +40,32 @@ export class AuthController {
   ): Promise<SignUpResponseDto> {
     const { user, accessToken, refreshToken } = await this.authService.signUp(dto);
 
-    // Set refresh token as HttpOnly cookie
+    this.setRefreshCookie(res, refreshToken);
+
+    return { user, accessToken };
+  }
+
+  @Post('sign-in')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UsePipes(new ZodValidationPipe(signInSchema))
+  @ApiOperation({ summary: 'Sign in with email and password' })
+  @ApiResponse({ status: 200, description: 'Sign-in successful', type: SignUpResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  async signIn(
+    @Body() dto: SignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<SignUpResponseDto> {
+    const { user, accessToken, refreshToken } = await this.authService.signIn(dto);
+
+    this.setRefreshCookie(res, refreshToken);
+
+    return { user, accessToken };
+  }
+
+  private setRefreshCookie(res: Response, refreshToken: string): void {
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
@@ -38,7 +74,5 @@ export class AuthController {
       path: '/api/auth',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-
-    return { user, accessToken };
   }
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
@@ -11,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module';
     AppConfigModule,
     DatabaseModule,
     RedisModule,
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
     LoggerModule.forRoot({
       pinoHttp: {
         transport:

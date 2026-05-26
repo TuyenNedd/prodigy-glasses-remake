@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +14,7 @@ import * as crypto from 'crypto';
 import { User, UserRole } from './entities/user.entity';
 import { RefreshToken, RefreshTokenStatus } from './entities/refresh-token.entity';
 import { SignUpDto } from './dto/sign-up.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
@@ -73,6 +79,49 @@ export class AuthService {
         });
       }
       throw new InternalServerErrorException('Failed to create user');
+    }
+
+    // Generate tokens
+    const { accessToken, refreshToken } = await this.generateTokenPair(user);
+
+    return {
+      user: UserResponseDto.fromEntity(user),
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async signIn(dto: SignInDto): Promise<{
+    user: UserResponseDto;
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    // Find user with password (select: false requires addSelect)
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email: dto.email })
+      .andWhere('user.deletedAt IS NULL')
+      .getOne();
+
+    if (!user) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'invalid_credentials',
+        message: 'Email hoặc mật khẩu không đúng',
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'invalid_credentials',
+        message: 'Email hoặc mật khẩu không đúng',
+      });
     }
 
     // Generate tokens
