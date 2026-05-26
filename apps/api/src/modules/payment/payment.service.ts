@@ -3,6 +3,8 @@ import {
   NotFoundException,
   ForbiddenException,
   BadGatewayException,
+  UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -115,6 +117,110 @@ export class PaymentService {
         code: 'payment_provider_error',
         message: 'Failed to create PayPal order',
       });
+    }
+  }
+
+  async handleWebhook(
+    rawBody: string,
+    headers: Record<string, string>,
+  ): Promise<{ status: string }> {
+    const logger = new Logger('PaymentService');
+
+    // Verify signature
+    const isValid = await this.verifyWebhookSignature(rawBody, headers);
+    if (!isValid) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        code: 'webhook_signature_invalid',
+        message: 'Invalid webhook signature',
+      });
+    }
+
+    const event = JSON.parse(rawBody) as {
+      id: string;
+      event_type: string;
+      resource?: { id?: string };
+    };
+
+    // Only process PAYMENT.CAPTURE.COMPLETED
+    if (event.event_type !== 'PAYMENT.CAPTURE.COMPLETED') {
+      logger.log(`Webhook event ${event.event_type} ignored (not PAYMENT.CAPTURE.COMPLETED)`);
+      return { status: 'ignored' };
+    }
+
+    // Find order by paypal_order_id
+    const paypalOrderId = event.resource?.id;
+    if (!paypalOrderId) {
+      logger.warn('Webhook missing resource.id');
+      return { status: 'ignored' };
+    }
+
+    const order = await this.orderRepository.findOne({
+      where: { paypalOrderId },
+    });
+
+    if (!order) {
+      logger.warn(`Order not found for PayPal order ${paypalOrderId}`);
+      return { status: 'order_not_found' };
+    }
+
+    // Mark as paid
+    order.isPaid = true;
+    order.paidAt = new Date();
+    order.status = OrderStatus.PAID;
+    await this.orderRepository.save(order);
+
+    logger.log(`Order ${order.id} marked as PAID via webhook`);
+    return { status: 'processed' };
+  }
+
+  private async verifyWebhookSignature(
+    rawBody: string,
+    headers: Record<string, string>,
+  ): Promise<boolean> {
+    const webhookId = this.configService.get<string>('PAYPAL_WEBHOOK_ID');
+    const paypalBaseUrl = this.configService.get<string>('PAYPAL_BASE_URL');
+    const clientId = this.configService.get<string>('PAYPAL_CLIENT_ID');
+    const clientSecret = this.configService.get<string>('PAYPAL_CLIENT_SECRET');
+
+    try {
+      // Get access token
+      const tokenRes = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+        },
+        body: 'grant_type=client_credentials',
+      });
+
+      if (!tokenRes.ok) return false;
+      const tokenData = (await tokenRes.json()) as { access_token: string };
+
+      // Verify signature via PayPal API
+      const verifyRes = await fetch(`${paypalBaseUrl}/v1/notifications/verify-webhook-signature`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenData.access_token}`,
+        },
+        body: JSON.stringify({
+          auth_algo: headers['paypal-auth-algo'],
+          cert_url: headers['paypal-cert-url'],
+          transmission_id: headers['paypal-transmission-id'],
+          transmission_sig: headers['paypal-transmission-sig'],
+          transmission_time: headers['paypal-transmission-time'],
+          webhook_id: webhookId,
+          webhook_event: JSON.parse(rawBody),
+        }),
+      });
+
+      if (!verifyRes.ok) return false;
+      const verifyData = (await verifyRes.json()) as { verification_status: string };
+      return verifyData.verification_status === 'SUCCESS';
+    } catch {
+      return false;
     }
   }
 }
