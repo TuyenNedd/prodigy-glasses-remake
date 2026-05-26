@@ -28,6 +28,7 @@ export const envSchema = z.object({
   PAYPAL_CLIENT_ID: z.string().default('sandbox-client-id'),
   PAYPAL_CLIENT_SECRET: z.string().default('sandbox-client-secret'),
   PAYPAL_BASE_URL: z.string().default('https://api-m.sandbox.paypal.com'),
+  PAYPAL_WEBHOOK_ID: z.string().default('sandbox-webhook-id'),
   USD_VND_RATE: z.coerce.number().default(24000),
 
   // CORS
