@@ -7,6 +7,7 @@ import { HealthModule } from './health/health.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
     HealthModule,
     AuthModule,
     CatalogModule,
+    CartModule,
   ],
 })
 export class AppModule {}
