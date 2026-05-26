@@ -60,8 +60,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Typecheck shared-types
-        run: npx tsc --noEmit -p packages/shared-types/tsconfig.json
+      - name: Build shared-types
+        run: npm run build -w @prodigy/shared-types
       - name: Build API
         run: npm run build -w @prodigy/api
 
@@ -78,7 +78,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Typecheck shared-types
-        run: npx tsc --noEmit -p packages/shared-types/tsconfig.json
+      - name: Build shared-types
+        run: npm run build -w @prodigy/shared-types
       - name: Build Web
         run: npm run build -w @prodigy/web
