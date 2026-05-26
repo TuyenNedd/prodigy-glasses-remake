@@ -119,11 +119,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* Rating */}
           <div className="flex items-center gap-2">
             <span className="text-yellow-500">
-              {'★'.repeat(Math.round(product.rating))}
-              {'☆'.repeat(5 - Math.round(product.rating))}
+              {'★'.repeat(Math.round(Number(product.rating)))}
+              {'☆'.repeat(5 - Math.round(Number(product.rating)))}
             </span>
             <span className="text-sm text-gray-500">
-              {product.rating.toFixed(1)} ({product.reviewCount} reviews)
+              {Number(product.rating).toFixed(1)} ({product.reviewCount} reviews)
             </span>
           </div>
 

@@ -27,7 +27,7 @@ export function ProductCard({
   rating,
   category,
 }: ProductCardProps) {
-  const discountedPrice = discount > 0 ? price * (1 - discount / 100) : price;
+  const discountedPrice = discount > 0 ? Number(price) * (1 - discount / 100) : Number(price);
 
   return (
     <Link href={`/products/${id}`} className="group block">
@@ -60,8 +60,8 @@ export function ProductCard({
         {category && <p className="text-xs text-gray-500">{category.name}</p>}
         <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{name}</h3>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-yellow-500">{'★'.repeat(Math.round(rating))}</span>
-          <span className="text-xs text-gray-400">({rating.toFixed(1)})</span>
+          <span className="text-xs text-yellow-500">{'★'.repeat(Math.round(Number(rating)))}</span>
+          <span className="text-xs text-gray-400">({Number(rating).toFixed(1)})</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">{formatVND(discountedPrice)}</span>
