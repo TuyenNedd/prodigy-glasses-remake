@@ -9,7 +9,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -19,6 +19,7 @@ import { SignUpDto, signUpSchema } from './dto/sign-up.dto';
 import { SignInDto, signInSchema } from './dto/sign-in.dto';
 import { SignUpResponseDto } from './dto/user-response.dto';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -28,6 +29,7 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  @Public()
   @Post('sign-up')
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(signUpSchema))
@@ -46,6 +48,7 @@ export class AuthController {
     return { user, accessToken };
   }
 
+  @Public()
   @Post('sign-in')
   @HttpCode(HttpStatus.OK)
   @UseGuards(ThrottlerGuard)
@@ -66,6 +69,7 @@ export class AuthController {
     return { user, accessToken };
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token using refresh cookie' })
@@ -85,6 +89,28 @@ export class AuthController {
     this.setRefreshCookie(res, refreshToken);
 
     return { accessToken };
+  }
+
+  @Post('sign-out')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Sign out — blacklist access token + revoke refresh family' })
+  @ApiResponse({ status: 204, description: 'Signed out successfully' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  async signOut(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const user = (req as unknown as { user: { id: string; jti: string } }).user;
+    const refreshCookie = req.cookies?.refresh_token as string | undefined;
+
+    await this.authService.signOut(user.jti, user.id, refreshCookie);
+
+    // Clear refresh cookie
+    res.cookie('refresh_token', '', {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: 'strict',
+      path: '/api/auth',
+      maxAge: 0,
+    });
   }
 
   private setRefreshCookie(res: Response, refreshToken: string): void {

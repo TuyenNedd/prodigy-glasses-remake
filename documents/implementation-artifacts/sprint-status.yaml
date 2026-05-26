@@ -54,7 +54,7 @@ development_status:
   2-1-user-entity-sign-up-endpoint: done
   2-2-sign-in-jwt-access-refresh-token-pair: done
   2-3-refresh-token-rotation-reuse-detection: done
-  2-4-sign-out-jwt-blacklist-rbac-guards: backlog
+  2-4-sign-out-jwt-blacklist-rbac-guards: done
   2-5-get-me-update-profile: backlog
   2-6-category-product-entities-seed-script: backlog
   2-7-catalog-read-endpoints-with-cache-aside: backlog
