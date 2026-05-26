@@ -8,12 +8,17 @@
     "start": "next start"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "@prodigy/shared-types": "^0.0.0",
     "@tailwindcss/postcss": "^4.3.0",
     "next": "^16.2.6",
     "postcss": "^8.5.15",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "tailwindcss": "^4.3.0"
+    "react-hook-form": "^7.76.1",
+    "tailwindcss": "^4.3.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
