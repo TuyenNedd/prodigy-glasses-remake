@@ -67,7 +67,7 @@ development_status:
   epic-3: in-progress
   3-1-cart-module-add-update-remove-get: done
   3-2-checkout-preview-order-create-atomic-transaction: done
-  3-3-cancel-order-stock-restore: in-progress
+  3-3-cancel-order-stock-restore: done
   3-4-paypal-create-order-endpoint: backlog
   3-5-paypal-webhook-receiver-signature-verification: backlog
   3-6-webhook-idempotency-dedup-table: backlog
