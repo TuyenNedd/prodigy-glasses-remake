@@ -159,7 +159,7 @@ export class CatalogService {
     if (cached) return JSON.parse(cached);
 
     const product = await this.productRepository.findOne({
-      where: { id, deletedAt: undefined },
+      where: { id },
       relations: { category: true },
     });
 
