@@ -24,6 +24,12 @@ export const envSchema = z.object({
   // Bcrypt
   BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(10).default(10),
 
+  // PayPal
+  PAYPAL_CLIENT_ID: z.string().default('sandbox-client-id'),
+  PAYPAL_CLIENT_SECRET: z.string().default('sandbox-client-secret'),
+  PAYPAL_BASE_URL: z.string().default('https://api-m.sandbox.paypal.com'),
+  USD_VND_RATE: z.coerce.number().default(24000),
+
   // CORS
   CORS_ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
 });
