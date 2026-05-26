@@ -74,7 +74,7 @@ development_status:
   3-7-bullmq-email-queue-nodemailer-worker: done
   3-8-frontend-cart-page-tanstack-query: done
   3-9-frontend-checkout-page-rhf-zod-paypal: done
-  3-10-frontend-my-orders-order-detail-pages: backlog
+  3-10-frontend-my-orders-order-detail-pages: done
   epic-3-retrospective: optional
 
   # === EPIC 4: Frontend Depth + Admin Module (Week 4) ===
