@@ -9,7 +9,8 @@
     "start:debug": "nest start --debug --watch",
     "migration:run": "npx ts-node -r tsconfig-paths/register --project tsconfig.json ./node_modules/typeorm/cli.js migration:run -d src/database/data-source.ts",
     "migration:revert": "npx ts-node -r tsconfig-paths/register --project tsconfig.json ./node_modules/typeorm/cli.js migration:revert -d src/database/data-source.ts",
-    "migration:create": "npx typeorm migration:create"
+    "migration:create": "npx typeorm migration:create",
+    "seed": "npx ts-node -r tsconfig-paths/register --project tsconfig.json src/database/seed-catalog.ts"
   },
   "dependencies": {
     "@nestjs-modules/ioredis": "^2.2.1",
