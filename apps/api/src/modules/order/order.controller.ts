@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Delete, Body, Param, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 
@@ -31,5 +31,17 @@ export class OrderController {
   async createOrder(@Req() req: Request, @Body() body: CheckoutPreviewInput) {
     const user = (req as unknown as { user: { id: string } }).user;
     return this.orderService.createOrder(user.id, body);
+  }
+
+  @Delete('orders/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Cancel order and restore stock' })
+  @ApiResponse({ status: 200, description: 'Order cancelled, stock restored' })
+  @ApiResponse({ status: 403, description: 'Not owner and not admin' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  @ApiResponse({ status: 409, description: 'Cannot cancel (wrong status)' })
+  async cancelOrder(@Req() req: Request, @Param('id') id: string) {
+    const user = (req as unknown as { user: { id: string; role: string } }).user;
+    return this.orderService.cancelOrder(id, user.id, user.role);
   }
 }

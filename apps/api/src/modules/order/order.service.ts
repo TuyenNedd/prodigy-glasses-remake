@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -231,6 +237,70 @@ export class OrderService {
         status: order.status,
         totalPrice: Number(order.totalPrice),
       };
+    });
+  }
+
+  async cancelOrder(orderId: string, userId: string, userRole: string): Promise<Order> {
+    return this.dataSource.transaction(async (manager) => {
+      const order = await manager.findOne(Order, {
+        where: { id: orderId },
+        relations: { items: true },
+      });
+
+      if (!order) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: 'Not Found',
+          message: 'Order not found',
+        });
+      }
+
+      // Check ownership (unless admin)
+      if (order.userId !== userId && userRole !== 'ADMIN') {
+        throw new ForbiddenException({
+          statusCode: 403,
+          error: 'Forbidden',
+          message: 'You can only cancel your own orders',
+        });
+      }
+
+      // Only PENDING or AWAITING_PAYMENT can be cancelled
+      const cancellableStatuses = [OrderStatus.PENDING, OrderStatus.AWAITING_PAYMENT];
+      if (!cancellableStatuses.includes(order.status)) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          code: 'cannot_cancel',
+          message: `Cannot cancel order with status "${order.status}"`,
+        });
+      }
+
+      // Restore stock atomically
+      for (const item of order.items) {
+        await manager
+          .createQueryBuilder()
+          .update(Product)
+          .set({ countInStock: () => `countInStock + ${item.amount}` })
+          .where('id = :id', { id: item.productId })
+          .execute();
+      }
+
+      // Update order status
+      order.status = OrderStatus.CANCELLED;
+      await manager.save(Order, order);
+
+      // Audit log (best-effort)
+      try {
+        await manager.query(
+          `INSERT INTO audit_logs (id, event, actor_id, actor_role, target_type, target_id, payload, createdAt)
+           VALUES (?, 'order_cancelled', ?, ?, 'order', ?, ?, NOW())`,
+          [crypto.randomUUID(), userId, userRole, orderId, JSON.stringify({ orderId, userId })],
+        );
+      } catch {
+        // Best-effort
+      }
+
+      return order;
     });
   }
 }
