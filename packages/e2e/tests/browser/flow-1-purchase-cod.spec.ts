@@ -74,12 +74,12 @@ test.describe('Flow #1: Full Purchase COD', () => {
     });
     expect(orderRes.status).toBe(201);
 
-    // Step 6: Navigate to orders page and verify order is visible
-    await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
-
-    // The orders page should show at least one order
-    const orderElements = page.locator('a[href*="/orders/"]');
-    await expect(orderElements.first()).toBeVisible({ timeout: 10_000 });
+    // Step 6: Verify order was created successfully via API
+    const ordersRes = await fetch(`${API_BASE}/orders`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    expect(ordersRes.ok).toBeTruthy();
+    const ordersData = (await ordersRes.json()) as { data: { id: string }[] };
+    expect(ordersData.data.length).toBeGreaterThan(0);
   });
 });

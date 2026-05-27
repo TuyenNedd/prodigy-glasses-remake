@@ -15,7 +15,7 @@
  */
 
 import { test, expect } from '../../fixtures';
-import { ensureAdminUser, ensureProduct } from '../../helpers/seed';
+import { ensureProduct } from '../../helpers/seed';
 
 const API_BASE = 'http://localhost:3001';
 
@@ -49,7 +49,10 @@ test.describe('Flow #7: Purchase-Gated Reviews', () => {
     expect(body.code).toBe('purchase_required');
   });
 
-  test('user with delivered order can post a review (201)', async ({ anonRequest }) => {
+  test('user with delivered order can post a review (201)', async ({
+    anonRequest,
+    adminRequest,
+  }) => {
     // Step 1: Sign up a fresh user
     const timestamp = Date.now();
     const email = `e2e-review-purchased-${timestamp}@test.com`;
@@ -91,26 +94,17 @@ test.describe('Flow #7: Purchase-Gated Reviews', () => {
     const order = await createOrderResponse.json();
     const orderId = order.orderId || order.id;
 
-    // Step 5: Sign in as admin and mark order as delivered
+    // Step 5: Mark order as delivered using admin fixture
     // State machine: PENDING → PAID → DELIVERED
-    const { email: adminEmail, password: adminPassword } = await ensureAdminUser();
-
-    const adminSignInResponse = await anonRequest.post(`${API_BASE}/api/auth/sign-in`, {
-      data: { email: adminEmail, password: adminPassword },
-    });
-    expect(adminSignInResponse.ok()).toBeTruthy();
-    const { accessToken: adminToken } = await adminSignInResponse.json();
 
     // First mark as paid (PENDING → PAID)
-    const paidResponse = await anonRequest.patch(`${API_BASE}/api/admin/orders/${orderId}`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+    const paidResponse = await adminRequest.patch(`${API_BASE}/api/admin/orders/${orderId}`, {
       data: { isPaid: true },
     });
     expect(paidResponse.status()).toBe(200);
 
     // Then mark as delivered (PAID → DELIVERED)
-    const deliverResponse = await anonRequest.patch(`${API_BASE}/api/admin/orders/${orderId}`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+    const deliverResponse = await adminRequest.patch(`${API_BASE}/api/admin/orders/${orderId}`, {
       data: { isDelivered: true },
     });
     expect(deliverResponse.status()).toBe(200);

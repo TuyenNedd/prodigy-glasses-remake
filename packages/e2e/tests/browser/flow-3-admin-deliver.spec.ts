@@ -75,6 +75,17 @@ test.describe('Flow #3: Admin Marks Order Delivered', () => {
     });
     const { accessToken: adminToken } = (await adminSignIn.json()) as { accessToken: string };
 
+    // Mark as paid first (PENDING → PAID), then delivered (PAID → DELIVERED)
+    const paidRes = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ isPaid: true }),
+    });
+    expect(paidRes.status).toBe(200);
+
     const deliverRes = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
       method: 'PATCH',
       headers: {

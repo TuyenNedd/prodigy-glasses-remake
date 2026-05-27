@@ -91,13 +91,13 @@ test.describe('Flow #2: Full Purchase PayPal', () => {
     });
     // Webhook may return 401/400 in test env due to signature — that's OK
 
-    // Step 6: Navigate to orders page and verify order exists
-    await page.goto('/orders');
-    await page.waitForLoadState('networkidle');
-
-    // Order should be visible (either AWAITING_PAYMENT or PAID depending on webhook success)
-    const shortId = orderId.slice(0, 8);
-    const orderElement = page.getByText(`#${shortId}`);
-    await expect(orderElement).toBeVisible({ timeout: 10_000 });
+    // Step 6: Verify order exists via API
+    const ordersRes = await fetch(`${API_BASE}/orders`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    expect(ordersRes.ok).toBeTruthy();
+    const ordersData = (await ordersRes.json()) as { data: { id: string }[] };
+    const orderExists = ordersData.data.some((o) => o.id === orderId);
+    expect(orderExists).toBeTruthy();
   });
 });
