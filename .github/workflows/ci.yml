@@ -14,6 +14,7 @@ jobs:
       api: ${{ steps.filter.outputs.api }}
       web: ${{ steps.filter.outputs.web }}
       shared: ${{ steps.filter.outputs.shared }}
+      e2e: ${{ steps.filter.outputs.e2e }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -30,6 +31,11 @@ jobs:
               - 'package-lock.json'
             shared:
               - 'packages/shared-types/**'
+            e2e:
+              - 'packages/e2e/**'
+              - 'docker/docker-compose.e2e.yml'
+              - 'docker/Dockerfile.api'
+              - 'docker/Dockerfile.web'
 
   # Always run: lint + format (fast, catches issues early)
   quality:
@@ -82,3 +88,57 @@ jobs:
         run: npm run build -w @prodigy/shared-types
       - name: Build Web
         run: npm run build -w @prodigy/web
+
+  # Run E2E tests when e2e, api, or web code changed
+  e2e:
+    name: E2E Tests
+    needs: [changes, quality]
+    if: needs.changes.outputs.e2e == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/e2e/package.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: packages/e2e
+
+      - name: Start E2E stack
+        run: docker compose -f docker/docker-compose.e2e.yml up -d --wait
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        working-directory: packages/e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: packages/e2e/playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: packages/e2e/test-results/
+          retention-days: 7
+
+      - name: Stop E2E stack
+        if: always()
+        run: docker compose -f docker/docker-compose.e2e.yml down

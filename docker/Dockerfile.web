@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy workspace root files
+COPY package.json package-lock.json tsconfig.base.json ./
+
+# Copy workspace packages
+COPY apps/web/ ./apps/web/
+COPY packages/shared-types/ ./packages/shared-types/
+
+# Install dependencies
+RUN npm ci --workspace=@prodigy/web --workspace=@prodigy/shared-types --include-workspace-root
+
+# Build shared-types first, then the web app
+RUN npm run build -w @prodigy/shared-types && npm run build -w @prodigy/web
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start", "-w", "@prodigy/web"]
