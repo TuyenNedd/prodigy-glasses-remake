@@ -88,7 +88,7 @@ development_status:
   4-7-admin-comment-management-audit-trail: done
   4-8-websocket-admin-gateway-realtime-new-orders-feed: done
   4-9-frontend-admin-server-actions-for-forms: done
-  4-10-frontend-optimistic-updates: backlog
+  4-10-frontend-optimistic-updates: done
   4-11-frontend-web-vitals-lighthouse-ci-integration: backlog
   epic-4-retrospective: optional
 

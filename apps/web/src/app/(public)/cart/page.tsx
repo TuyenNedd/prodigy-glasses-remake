@@ -79,12 +79,58 @@ export default function CartPage() {
   const updateMutation = useMutation({
     mutationFn: ({ productId, amount }: { productId: string; amount: number }) =>
       updateCartItem(token, productId, amount),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
+    onMutate: async ({ productId, amount }) => {
+      await queryClient.cancelQueries({ queryKey: ['cart'] });
+      const previous = queryClient.getQueryData<CartResponse>(['cart']);
+      queryClient.setQueryData<CartResponse>(['cart'], (old) => {
+        if (!old) return old;
+        if (amount === 0) {
+          const items = old.items.filter((i) => i.productId !== productId);
+          return {
+            items,
+            itemsPrice: items.reduce((s, i) => s + i.lineTotal, 0),
+            totalQuantity: items.reduce((s, i) => s + i.amount, 0),
+          };
+        }
+        const items = old.items.map((i) =>
+          i.productId === productId
+            ? { ...i, amount, lineTotal: (i.lineTotal / i.amount) * amount }
+            : i,
+        );
+        return {
+          items,
+          itemsPrice: items.reduce((s, i) => s + i.lineTotal, 0),
+          totalQuantity: items.reduce((s, i) => s + i.amount, 0),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['cart'], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
 
   const removeMutation = useMutation({
     mutationFn: (productId: string) => removeCartItem(token, productId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
+    onMutate: async (productId) => {
+      await queryClient.cancelQueries({ queryKey: ['cart'] });
+      const previous = queryClient.getQueryData<CartResponse>(['cart']);
+      queryClient.setQueryData<CartResponse>(['cart'], (old) => {
+        if (!old) return old;
+        const items = old.items.filter((i) => i.productId !== productId);
+        return {
+          items,
+          itemsPrice: items.reduce((s, i) => s + i.lineTotal, 0),
+          totalQuantity: items.reduce((s, i) => s + i.amount, 0),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['cart'], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
 
   if (!token) {
