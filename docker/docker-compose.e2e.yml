@@ -44,6 +44,7 @@ services:
     container_name: prodigy-api-e2e
     ports:
       - '3001:3001'
+    command: ['sh', '/app/docker/entrypoint-e2e.sh']
     environment:
       PORT: 3001
       NODE_ENV: test
