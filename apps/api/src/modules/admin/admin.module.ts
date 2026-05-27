@@ -9,6 +9,8 @@ import { AdminProductsController } from './admin-products.controller';
 import { AdminProductsService } from './admin-products.service';
 import { AdminCategoriesController } from './admin-categories.controller';
 import { AdminCategoriesService } from './admin-categories.service';
+import { AdminOrdersController } from './admin-orders.controller';
+import { AdminOrdersService } from './admin-orders.service';
 import { Order } from '../order/entities/order.entity';
 import { Product } from '../catalog/entities/product.entity';
 import { User } from '../auth/entities/user.entity';
@@ -21,8 +23,15 @@ import { Category } from '../catalog/entities/category.entity';
     AdminUsersController,
     AdminProductsController,
     AdminCategoriesController,
+    AdminOrdersController,
   ],
-  providers: [AdminService, AdminUsersService, AdminProductsService, AdminCategoriesService],
+  providers: [
+    AdminService,
+    AdminUsersService,
+    AdminProductsService,
+    AdminCategoriesService,
+    AdminOrdersService,
+  ],
   exports: [AdminService],
 })
 export class AdminModule {}
