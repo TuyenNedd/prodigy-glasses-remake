@@ -78,7 +78,7 @@ development_status:
   epic-3-retrospective: optional
 
   # === EPIC 4: Frontend Depth + Admin Module (Week 4) ===
-  epic-4: in-progress
+  epic-4: done
   4-1-reviews-list-submit-verified-purchase-delete: done
   4-2-admin-dashboard-kpi-endpoint: done
   4-3-admin-user-management-crud-bulk: done
@@ -93,8 +93,8 @@ development_status:
   epic-4-retrospective: optional
 
   # === EPIC 5: Tests, Observability, Docs & Polish (Week 5) ===
-  epic-5: backlog
-  5-1-unit-tests-auth-payment-services: backlog
+  epic-5: in-progress
+  5-1-unit-tests-auth-payment-services: done
   5-2-unit-tests-catalog-order-notification-services: backlog
   5-3-integration-tests-testcontainers-security-data-integrity: backlog
   5-4-playwright-e2e-7-critical-flows: backlog
