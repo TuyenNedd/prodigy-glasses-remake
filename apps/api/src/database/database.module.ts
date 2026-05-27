@@ -14,7 +14,7 @@ import { ConfigService } from '@nestjs/config';
         password: config.get<string>('DB_PASSWORD', 'prodigy_secret'),
         database: config.get<string>('DB_DATABASE', 'prodigy_glasses'),
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: config.get<string>('NODE_ENV') === 'test',
         logging: config.get<string>('NODE_ENV') === 'development',
       }),
     }),

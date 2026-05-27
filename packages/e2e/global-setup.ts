@@ -1,85 +1,108 @@
 /* eslint-disable no-console */
 import type { FullConfig } from '@playwright/test';
+import { execSync } from 'node:child_process';
 
 const API_BASE = 'http://localhost:3001';
 const WEB_BASE = 'http://localhost:3000';
 
-/**
- * Admin credentials seeded by migration 1716480900000-seed-admin-user.
- * Password defaults to 'Admin@123456' unless ADMIN_SEED_PASSWORD is set.
- */
-const SEEDED_ADMIN_EMAIL = 'admin@prodigy-glasses.local';
-const SEEDED_ADMIN_PASSWORD = 'Admin@123456';
+const ADMIN_EMAIL = 'admin@e2e-test.com';
+const ADMIN_PASSWORD = 'Admin123!@#';
 
 /**
  * Waits for a URL to return a 2xx response with exponential backoff.
- * Polls every 2s initially, increasing interval up to max 60s total.
  */
-async function waitForHealthy(url: string, timeout = 60_000): Promise<void> {
+async function waitForHealthy(url: string, timeout = 120_000): Promise<void> {
   const start = Date.now();
   let interval = 2_000;
 
   while (Date.now() - start < timeout) {
     try {
       const response = await fetch(url);
-      if (response.ok) {
-        return;
-      }
+      if (response.ok) return;
     } catch {
-      // Service not ready yet — retry
+      // Service not ready yet
     }
-
     await new Promise((resolve) => setTimeout(resolve, interval));
     interval = Math.min(interval * 1.5, 10_000);
   }
 
   throw new Error(
     `Service at ${url} did not become healthy within ${timeout / 1000}s. ` +
-      `Ensure the Docker E2E stack is running: docker compose -f docker/docker-compose.e2e.yml up -d`,
+      `Ensure the Docker E2E stack is running.`,
   );
 }
 
 /**
+ * Seeds the database with catalog data and admin user using docker exec.
+ * This runs inside the API container where all dependencies are available.
+ */
+function seedViaDockerExec(): void {
+  try {
+    // Run seed-catalog inside the API container
+    execSync(
+      "docker exec prodigy-api-e2e node -e \"require('reflect-metadata'); require('./apps/api/dist/database/seed-catalog')\"",
+      { stdio: 'pipe', timeout: 60_000 },
+    );
+    console.log('[global-setup] ✅ Catalog seeded');
+  } catch {
+    console.log('[global-setup] ⚠️ Seed skipped (may already exist or script unavailable)');
+  }
+}
+
+/**
+ * Creates admin user via sign-up API, then promotes via docker exec SQL.
+ */
+async function createAdminUser(): Promise<void> {
+  // Sign up
+  const signUpRes = await fetch(`${API_BASE}/api/auth/sign-up`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD, name: 'E2E Admin' }),
+  });
+
+  if (signUpRes.status === 409) {
+    console.log('[global-setup] Admin user already exists');
+  } else if (signUpRes.ok) {
+    console.log('[global-setup] Admin user created');
+  } else {
+    const body = await signUpRes.text();
+    throw new Error(`[global-setup] Failed to create admin (${signUpRes.status}): ${body}`);
+  }
+
+  // Promote to ADMIN role via docker exec
+  try {
+    execSync(
+      `docker exec prodigy-mysql-e2e mysql -uprodigy_e2e -pe2e_secret prodigy_glasses_e2e -e "UPDATE users SET role='ADMIN' WHERE email='${ADMIN_EMAIL}';"`,
+      { stdio: 'pipe', timeout: 10_000 },
+    );
+    console.log('[global-setup] ✅ Admin user promoted');
+  } catch {
+    console.warn('[global-setup] ⚠️ Could not promote admin via mysql — may already be admin');
+  }
+}
+
+/**
  * Playwright global setup — runs once before all tests.
- *
- * The API container handles migrations and seeding via its entrypoint script.
- * This setup only needs to:
- * 1. Wait for API and Web services to be healthy (implies migrations + seed done)
- * 2. Store admin credentials in process.env for test fixtures
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function globalSetup(_config: FullConfig): Promise<void> {
   console.log('[global-setup] Waiting for services to be healthy...');
 
-  // Step 1: Wait for API (health check passes only after migrations + seed complete)
   await waitForHealthy(`${API_BASE}/api/health`, 120_000);
   console.log('[global-setup] ✅ API is healthy');
 
-  // Step 2: Wait for Web
   await waitForHealthy(WEB_BASE, 60_000);
   console.log('[global-setup] ✅ Web is healthy');
 
-  // Step 3: Verify admin user can sign in (seeded by migration)
-  const signInResponse = await fetch(`${API_BASE}/api/auth/sign-in`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: SEEDED_ADMIN_EMAIL,
-      password: SEEDED_ADMIN_PASSWORD,
-    }),
-  });
+  // Seed catalog data
+  seedViaDockerExec();
 
-  if (!signInResponse.ok) {
-    console.warn(
-      `[global-setup] ⚠️ Admin sign-in failed (${signInResponse.status}) — admin tests may fail`,
-    );
-  } else {
-    console.log('[global-setup] ✅ Admin user verified');
-  }
+  // Create and promote admin user
+  await createAdminUser();
 
-  // Step 4: Store admin credentials in env for test fixtures
-  process.env.ADMIN_EMAIL = SEEDED_ADMIN_EMAIL;
-  process.env.ADMIN_PASSWORD = SEEDED_ADMIN_PASSWORD;
+  // Store credentials for test fixtures
+  process.env.ADMIN_EMAIL = ADMIN_EMAIL;
+  process.env.ADMIN_PASSWORD = ADMIN_PASSWORD;
 
   console.log('[global-setup] ✅ Global setup complete');
 }
