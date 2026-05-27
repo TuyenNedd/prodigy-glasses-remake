@@ -86,7 +86,7 @@ development_status:
   4-5-admin-category-management-crud-cascade-protection: done
   4-6-admin-order-management-state-machine-mark-delivered: done
   4-7-admin-comment-management-audit-trail: done
-  4-8-websocket-admin-gateway-realtime-new-orders-feed: in-progress
+  4-8-websocket-admin-gateway-realtime-new-orders-feed: done
   4-9-frontend-admin-server-actions-for-forms: backlog
   4-10-frontend-optimistic-updates: backlog
   4-11-frontend-web-vitals-lighthouse-ci-integration: backlog
