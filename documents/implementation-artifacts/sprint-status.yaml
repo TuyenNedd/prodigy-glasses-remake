@@ -94,7 +94,7 @@ development_status:
 
   # === EPIC 5: Tests, Observability, Docs & Polish (Week 5) ===
   epic-5: in-progress
-  5-1-unit-tests-auth-payment-services: in-progress
+  5-1-unit-tests-auth-payment-services: done
   5-2-unit-tests-catalog-order-notification-services: backlog
   5-3-integration-tests-testcontainers-security-data-integrity: backlog
   5-4-playwright-e2e-7-critical-flows: backlog
