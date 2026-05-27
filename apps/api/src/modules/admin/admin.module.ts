@@ -11,19 +11,23 @@ import { AdminCategoriesController } from './admin-categories.controller';
 import { AdminCategoriesService } from './admin-categories.service';
 import { AdminOrdersController } from './admin-orders.controller';
 import { AdminOrdersService } from './admin-orders.service';
+import { AdminCommentsController } from './admin-comments.controller';
+import { AdminCommentsService } from './admin-comments.service';
 import { Order } from '../order/entities/order.entity';
 import { Product } from '../catalog/entities/product.entity';
 import { User } from '../auth/entities/user.entity';
 import { Category } from '../catalog/entities/category.entity';
+import { Review } from '../catalog/entities/review.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, Product, User, Category])],
+  imports: [TypeOrmModule.forFeature([Order, Product, User, Category, Review])],
   controllers: [
     AdminController,
     AdminUsersController,
     AdminProductsController,
     AdminCategoriesController,
     AdminOrdersController,
+    AdminCommentsController,
   ],
   providers: [
     AdminService,
@@ -31,6 +35,7 @@ import { Category } from '../catalog/entities/category.entity';
     AdminProductsService,
     AdminCategoriesService,
     AdminOrdersService,
+    AdminCommentsService,
   ],
   exports: [AdminService],
 })

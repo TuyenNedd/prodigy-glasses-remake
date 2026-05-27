@@ -85,7 +85,7 @@ development_status:
   4-4-admin-product-management-crud-cache-invalidation: done
   4-5-admin-category-management-crud-cascade-protection: done
   4-6-admin-order-management-state-machine-mark-delivered: done
-  4-7-admin-comment-management-audit-trail: backlog
+  4-7-admin-comment-management-audit-trail: done
   4-8-websocket-admin-gateway-realtime-new-orders-feed: backlog
   4-9-frontend-admin-server-actions-for-forms: backlog
   4-10-frontend-optimistic-updates: backlog
