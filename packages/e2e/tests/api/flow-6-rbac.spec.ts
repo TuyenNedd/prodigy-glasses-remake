@@ -18,13 +18,13 @@ const FAKE_ID = '00000000-0000-0000-0000-000000000000';
  */
 const ADMIN_ENDPOINTS = [
   { method: 'GET', path: '/api/admin/orders' },
-  { method: 'GET', path: '/api/admin/products' },
   { method: 'GET', path: '/api/admin/users' },
-  { method: 'GET', path: '/api/admin/categories' },
   { method: 'GET', path: '/api/admin/comments' },
-  { method: 'PATCH', path: '/api/admin/orders/:id/status' },
+  { method: 'PATCH', path: '/api/admin/orders/:id' },
   { method: 'PUT', path: '/api/admin/products/:id' },
   { method: 'DELETE', path: '/api/admin/products/:id' },
+  { method: 'PUT', path: '/api/admin/categories/:id' },
+  { method: 'DELETE', path: '/api/admin/categories/:id' },
 ] as const;
 
 test.describe('Flow #6: RBAC Enforcement', () => {

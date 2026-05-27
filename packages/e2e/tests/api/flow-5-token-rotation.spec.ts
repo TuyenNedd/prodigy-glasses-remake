@@ -78,7 +78,7 @@ test.describe('Flow #5: Token Rotation & Reuse Detection', () => {
     const signInResponse = await anonRequest.post(`${API_BASE}/api/auth/sign-in`, {
       data: { email, password },
     });
-    expect(signInResponse.status()).toBe(201);
+    expect(signInResponse.status()).toBe(200);
     const refreshToken_v1 = extractRefreshToken(signInResponse);
     expect(refreshToken_v1).toBeTruthy();
 

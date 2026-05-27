@@ -82,8 +82,8 @@ async function createPendingOrder(): Promise<{ orderId: string }> {
     );
   }
 
-  const order = (await createOrderRes.json()) as { id: string };
-  return { orderId: order.id };
+  const order = (await createOrderRes.json()) as { orderId: string };
+  return { orderId: order.orderId };
 }
 
 test.describe('Flow #3: Admin Marks Order Delivered', () => {
