@@ -1,110 +1,98 @@
 /**
  * Flow #3: Admin Marks Order as Delivered
  *
- * Validates the fulfillment workflow:
- * Admin signs in → navigates to admin orders → marks a pending order as delivered → verifies status change
+ * Validates the fulfillment workflow via API:
+ * Create order → Admin marks as delivered → Verify status change in admin page
+ *
+ * Note: The admin orders page is read-only (no action buttons).
+ * This test uses the API to perform the delivery action and verifies
+ * the status is reflected in the admin orders page.
  *
  * Validates: Requirements 6.1, 6.2
  */
 
 import { test, expect } from '../../fixtures';
-import { AdminOrdersPage } from '../../pages';
-import { ensureProduct } from '../../helpers/seed';
+import { ensureAdminUser, ensureProduct } from '../../helpers/seed';
 
 const API_BASE = 'http://localhost:3001/api';
 
-/**
- * Creates a pending order via API by signing up a fresh user,
- * adding a product to their cart, and placing a COD order.
- * Returns the order ID for the admin to mark as delivered.
- */
-async function createPendingOrder(): Promise<{ orderId: string }> {
-  const timestamp = Date.now();
-  const email = `pending-order-${timestamp}@e2e-test.com`;
-  const password = 'TestPass123!';
-
-  // Sign up a fresh user
-  const signUpRes = await fetch(`${API_BASE}/auth/sign-up`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name: 'Pending Order User' }),
-  });
-
-  if (!signUpRes.ok) {
-    throw new Error(`[flow-3] Sign-up failed (${signUpRes.status}): ${await signUpRes.text()}`);
-  }
-
-  const { accessToken } = (await signUpRes.json()) as { accessToken: string };
-
-  // Get a product to add to cart
-  const product = await ensureProduct();
-
-  // Add product to cart
-  const addToCartRes = await fetch(`${API_BASE}/cart/items`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ productId: product.id, amount: 1 }),
-  });
-
-  if (!addToCartRes.ok) {
-    throw new Error(
-      `[flow-3] Add to cart failed (${addToCartRes.status}): ${await addToCartRes.text()}`,
-    );
-  }
-
-  // Create order with COD payment (results in PENDING status)
-  const createOrderRes = await fetch(`${API_BASE}/orders`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      shippingAddress: {
-        fullName: 'Pending Order User',
-        phone: '0901234567',
-        address: '456 Test Avenue',
-        city: 'Ho Chi Minh',
-        district: 'District 3',
-        ward: 'Ward 7',
-      },
-      deliveryMethod: 'fast',
-      paymentMethod: 'COD',
-    }),
-  });
-
-  if (!createOrderRes.ok) {
-    throw new Error(
-      `[flow-3] Create order failed (${createOrderRes.status}): ${await createOrderRes.text()}`,
-    );
-  }
-
-  const order = (await createOrderRes.json()) as { orderId: string };
-  return { orderId: order.orderId };
-}
-
 test.describe('Flow #3: Admin Marks Order Delivered', () => {
-  test('admin navigates to orders → marks pending order as delivered → status updates', async ({
+  test('create order → admin marks delivered via API → status reflected in admin page', async ({
     adminPage,
   }) => {
-    // Step 1: Create a pending order via API
-    const { orderId } = await createPendingOrder();
+    // Step 1: Create a user and order via API
+    const timestamp = Date.now();
+    const email = `order-user-${timestamp}@e2e-test.com`;
+    const password = 'TestPass123!';
 
-    // Step 2: Navigate to admin orders page
-    const adminOrders = new AdminOrdersPage(adminPage);
-    await adminOrders.goto();
-
-    // Step 3: Mark the order as delivered
-    await adminOrders.markAsDelivered(orderId);
-
-    // Step 4: Verify the status is now DELIVERED in the admin order list
-    const shortId = orderId.slice(0, 8);
-    const orderRow = adminPage.getByRole('row').filter({
-      hasText: `#${shortId}`,
+    const signUpRes = await fetch(`${API_BASE}/auth/sign-up`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name: 'Order User' }),
     });
+    expect(signUpRes.ok).toBeTruthy();
+    const { accessToken: userToken } = (await signUpRes.json()) as { accessToken: string };
+
+    // Add product to cart
+    const product = await ensureProduct();
+    await fetch(`${API_BASE}/cart/items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({ productId: product.id, amount: 1 }),
+    });
+
+    // Create order
+    const orderRes = await fetch(`${API_BASE}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        shippingAddress: {
+          fullName: 'Order User',
+          phone: '0901234567',
+          address: '123 Test St',
+          city: 'Ho Chi Minh',
+        },
+        deliveryMethod: 'standard',
+        paymentMethod: 'COD',
+      }),
+    });
+    expect(orderRes.status).toBe(201);
+    const { orderId } = (await orderRes.json()) as { orderId: string };
+    expect(orderId).toBeTruthy();
+
+    // Step 2: Admin marks order as delivered via API
+    const { email: adminEmail, password: adminPassword } = await ensureAdminUser();
+    const adminSignIn = await fetch(`${API_BASE}/auth/sign-in`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: adminEmail, password: adminPassword }),
+    });
+    const { accessToken: adminToken } = (await adminSignIn.json()) as { accessToken: string };
+
+    const deliverRes = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ isDelivered: true }),
+    });
+    expect(deliverRes.status).toBe(200);
+
+    // Step 3: Navigate to admin orders page and verify status
+    await adminPage.goto('/admin-orders');
+    await adminPage.waitForLoadState('networkidle');
+
+    // Find the order row and verify DELIVERED status
+    const shortId = orderId.slice(0, 8);
+    const orderRow = adminPage.getByRole('row').filter({ hasText: `#${shortId}` });
+    await expect(orderRow).toBeVisible({ timeout: 10_000 });
     await expect(orderRow.getByText('DELIVERED')).toBeVisible();
   });
 });

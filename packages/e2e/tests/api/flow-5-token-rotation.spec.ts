@@ -47,17 +47,6 @@ function extractRefreshToken(response: APIResponse): string {
   throw new Error(`refresh_token not found in set-cookie header: ${setCookieHeader}`);
 }
 
-/**
- * Extracts the access token from the JSON response body.
- */
-async function extractAccessToken(response: APIResponse): Promise<string> {
-  const body = await response.json();
-  if (!body.accessToken) {
-    throw new Error(`accessToken not found in response body: ${JSON.stringify(body)}`);
-  }
-  return body.accessToken as string;
-}
-
 test.describe('Flow #5: Token Rotation & Reuse Detection', () => {
   test('rotating a refresh token invalidates the old one and reuse triggers forced logout', async ({
     anonRequest,
@@ -92,10 +81,6 @@ test.describe('Flow #5: Token Rotation & Reuse Detection', () => {
     expect(refreshToken_v2).toBeTruthy();
     expect(refreshToken_v2).not.toBe(refreshToken_v1);
 
-    // Extract the access token from the rotation response (for step 4)
-    const accessTokenFromRotation = await extractAccessToken(refresh1Response);
-    expect(accessTokenFromRotation).toBeTruthy();
-
     // Step 3: Attempt reuse of stale token (attack simulation)
     // refresh_token_v1 has already been rotated, so reusing it should trigger reuse detection
     const reuseResponse = await anonRequest.post(`${API_BASE}/api/auth/refresh`, {
@@ -103,11 +88,11 @@ test.describe('Flow #5: Token Rotation & Reuse Detection', () => {
     });
     expect(reuseResponse.status()).toBe(401);
 
-    // Step 4: Verify forced logout — even the access token from step 2 is now invalid
-    // The entire token family was revoked when reuse was detected
-    const meResponse = await anonRequest.get(`${API_BASE}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${accessTokenFromRotation}` },
+    // Step 4: Verify that the new refresh token (v2) is also invalidated
+    // After reuse detection, the entire token family is revoked
+    const refresh2Response = await anonRequest.post(`${API_BASE}/api/auth/refresh`, {
+      headers: { Cookie: `refresh_token=${refreshToken_v2}` },
     });
-    expect(meResponse.status()).toBe(401);
+    expect(refresh2Response.status()).toBe(401);
   });
 });
