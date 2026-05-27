@@ -9,6 +9,9 @@ COPY package.json package-lock.json tsconfig.base.json ./
 COPY apps/api/ ./apps/api/
 COPY packages/shared-types/ ./packages/shared-types/
 
+# Copy E2E entrypoint script (used by docker-compose.e2e.yml)
+COPY docker/entrypoint-e2e.sh ./docker/entrypoint-e2e.sh
+
 # Install dependencies
 RUN npm ci --workspace=@prodigy/api --workspace=@prodigy/shared-types --include-workspace-root
 

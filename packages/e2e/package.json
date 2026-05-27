@@ -1,0 +1,17 @@
+{
+  "name": "@prodigy/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:browser": "playwright test --project=browser-e2e",
+    "test:api": "playwright test --project=api-tests"
+  },
+  "dependencies": {
+    "@prodigy/shared-types": "^0.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "typescript": "~5.5.4"
+  }
+}
