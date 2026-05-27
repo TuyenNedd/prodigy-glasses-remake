@@ -80,7 +80,7 @@ development_status:
   # === EPIC 4: Frontend Depth + Admin Module (Week 4) ===
   epic-4: in-progress
   4-1-reviews-list-submit-verified-purchase-delete: done
-  4-2-admin-dashboard-kpi-endpoint: backlog
+  4-2-admin-dashboard-kpi-endpoint: in-progress
   4-3-admin-user-management-crud-bulk: backlog
   4-4-admin-product-management-crud-cache-invalidation: backlog
   4-5-admin-category-management-crud-cascade-protection: backlog
