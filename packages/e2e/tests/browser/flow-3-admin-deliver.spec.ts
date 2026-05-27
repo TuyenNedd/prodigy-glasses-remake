@@ -1,57 +1,48 @@
 /**
  * Flow #3: Admin Marks Order as Delivered
  *
- * Validates the fulfillment workflow via API:
- * Create order → Admin marks as delivered → Verify status change in admin page
+ * Validates the fulfillment workflow:
+ * Create order → Admin marks as paid → Admin marks as delivered → Verify via API
  *
- * Note: The admin orders page is read-only (no action buttons).
- * This test uses the API to perform the delivery action and verifies
- * the status is reflected in the admin orders page.
+ * Uses adminRequest fixture for admin operations to avoid rate limiting.
+ * Verifies the order status change via API (admin orders page is read-only).
  *
  * Validates: Requirements 6.1, 6.2
  */
 
 import { test, expect } from '../../fixtures';
-import { ensureAdminUser, ensureProduct } from '../../helpers/seed';
+import { ensureProduct } from '../../helpers/seed';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = 'http://localhost:3001';
 
 test.describe('Flow #3: Admin Marks Order Delivered', () => {
-  test('create order → admin marks delivered via API → status reflected in admin page', async ({
-    adminPage,
+  test('create order → admin marks paid → delivered → verify status', async ({
+    anonRequest,
+    adminRequest,
   }) => {
-    // Step 1: Create a user and order via API
+    // Step 1: Create a user and order
     const timestamp = Date.now();
     const email = `order-user-${timestamp}@e2e-test.com`;
     const password = 'TestPass123!';
 
-    const signUpRes = await fetch(`${API_BASE}/auth/sign-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name: 'Order User' }),
+    const signUpRes = await anonRequest.post(`${API_BASE}/api/auth/sign-up`, {
+      data: { email, password, name: 'Order User' },
     });
-    expect(signUpRes.ok).toBeTruthy();
+    expect(signUpRes.status()).toBe(201);
     const { accessToken: userToken } = (await signUpRes.json()) as { accessToken: string };
 
     // Add product to cart
     const product = await ensureProduct();
-    await fetch(`${API_BASE}/cart/items`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userToken}`,
-      },
-      body: JSON.stringify({ productId: product.id, amount: 1 }),
+    const addCartRes = await anonRequest.post(`${API_BASE}/api/cart/items`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+      data: { productId: product.id, amount: 1 },
     });
+    expect(addCartRes.ok()).toBeTruthy();
 
     // Create order
-    const orderRes = await fetch(`${API_BASE}/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userToken}`,
-      },
-      body: JSON.stringify({
+    const orderRes = await anonRequest.post(`${API_BASE}/api/orders`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+      data: {
         shippingAddress: {
           fullName: 'Order User',
           phone: '0901234567',
@@ -60,50 +51,28 @@ test.describe('Flow #3: Admin Marks Order Delivered', () => {
         },
         deliveryMethod: 'fast',
         paymentMethod: 'COD',
-      }),
+      },
     });
-    expect(orderRes.status).toBe(201);
+    expect(orderRes.status()).toBe(201);
     const { orderId } = (await orderRes.json()) as { orderId: string };
     expect(orderId).toBeTruthy();
 
-    // Step 2: Admin marks order as delivered via API
-    const { email: adminEmail, password: adminPassword } = await ensureAdminUser();
-    const adminSignIn = await fetch(`${API_BASE}/auth/sign-in`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: adminEmail, password: adminPassword }),
+    // Step 2: Admin marks order as paid (PENDING → PAID)
+    const paidRes = await adminRequest.patch(`${API_BASE}/api/admin/orders/${orderId}`, {
+      data: { isPaid: true },
     });
-    const { accessToken: adminToken } = (await adminSignIn.json()) as { accessToken: string };
+    expect(paidRes.status()).toBe(200);
 
-    // Mark as paid first (PENDING → PAID), then delivered (PAID → DELIVERED)
-    const paidRes = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
-      },
-      body: JSON.stringify({ isPaid: true }),
+    // Step 3: Admin marks order as delivered (PAID → DELIVERED)
+    const deliverRes = await adminRequest.patch(`${API_BASE}/api/admin/orders/${orderId}`, {
+      data: { isDelivered: true },
     });
-    expect(paidRes.status).toBe(200);
+    expect(deliverRes.status()).toBe(200);
 
-    const deliverRes = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
-      },
-      body: JSON.stringify({ isDelivered: true }),
-    });
-    expect(deliverRes.status).toBe(200);
-
-    // Step 3: Navigate to admin orders page and verify status
-    await adminPage.goto('/admin-orders');
-    await adminPage.waitForLoadState('networkidle');
-
-    // Find the order row and verify DELIVERED status
-    const shortId = orderId.slice(0, 8);
-    const orderRow = adminPage.getByRole('row').filter({ hasText: `#${shortId}` });
-    await expect(orderRow).toBeVisible({ timeout: 10_000 });
-    await expect(orderRow.getByText('DELIVERED')).toBeVisible();
+    // Step 4: Verify order status is DELIVERED
+    const orderDetail = await adminRequest.get(`${API_BASE}/api/admin/orders/${orderId}`);
+    expect(orderDetail.ok()).toBeTruthy();
+    const orderData = (await orderDetail.json()) as { status: string };
+    expect(orderData.status).toBe('DELIVERED');
   });
 });

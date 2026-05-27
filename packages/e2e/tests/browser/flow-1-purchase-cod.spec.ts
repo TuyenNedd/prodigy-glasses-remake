@@ -75,7 +75,7 @@ test.describe('Flow #1: Full Purchase COD', () => {
     expect(orderRes.status).toBe(201);
 
     // Step 6: Verify order was created successfully via API
-    const ordersRes = await fetch(`${API_BASE}/orders`, {
+    const ordersRes = await fetch(`${API_BASE}/orders/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     expect(ordersRes.ok).toBeTruthy();

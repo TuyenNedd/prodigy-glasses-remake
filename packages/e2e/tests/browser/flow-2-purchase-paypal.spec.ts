@@ -92,7 +92,7 @@ test.describe('Flow #2: Full Purchase PayPal', () => {
     // Webhook may return 401/400 in test env due to signature — that's OK
 
     // Step 6: Verify order exists via API
-    const ordersRes = await fetch(`${API_BASE}/orders`, {
+    const ordersRes = await fetch(`${API_BASE}/orders/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     expect(ordersRes.ok).toBeTruthy();
