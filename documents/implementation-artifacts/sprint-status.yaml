@@ -96,7 +96,7 @@ development_status:
   epic-5: in-progress
   5-1-unit-tests-auth-payment-services: done
   5-2-unit-tests-catalog-order-notification-services: done
-  5-3-integration-tests-testcontainers-security-data-integrity: backlog
+  5-3-integration-tests-testcontainers-security-data-integrity: done
   5-4-playwright-e2e-7-critical-flows: backlog
   5-5-opentelemetry-instrumentation-jaeger-verification: backlog
   5-6-adrs-architecture-diagrams: backlog
