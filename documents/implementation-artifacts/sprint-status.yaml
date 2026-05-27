@@ -82,7 +82,7 @@ development_status:
   4-1-reviews-list-submit-verified-purchase-delete: done
   4-2-admin-dashboard-kpi-endpoint: done
   4-3-admin-user-management-crud-bulk: done
-  4-4-admin-product-management-crud-cache-invalidation: backlog
+  4-4-admin-product-management-crud-cache-invalidation: in-progress
   4-5-admin-category-management-crud-cascade-protection: backlog
   4-6-admin-order-management-state-machine-mark-delivered: backlog
   4-7-admin-comment-management-audit-trail: backlog
