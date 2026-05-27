@@ -64,7 +64,7 @@ test.describe('Flow #2: Full Purchase PayPal', () => {
           address: '456 PayPal Street',
           city: 'Ho Chi Minh City',
         },
-        deliveryMethod: 'standard',
+        deliveryMethod: 'fast',
         paymentMethod: 'PAYPAL',
       }),
     });

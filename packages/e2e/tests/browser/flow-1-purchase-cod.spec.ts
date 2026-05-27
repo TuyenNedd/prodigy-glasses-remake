@@ -68,7 +68,7 @@ test.describe('Flow #1: Full Purchase COD', () => {
           address: '123 Test Street',
           city: 'Ho Chi Minh City',
         },
-        deliveryMethod: 'standard',
+        deliveryMethod: 'fast',
         paymentMethod: 'COD',
       }),
     });

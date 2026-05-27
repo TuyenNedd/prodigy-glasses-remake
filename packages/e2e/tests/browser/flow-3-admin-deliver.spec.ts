@@ -58,7 +58,7 @@ test.describe('Flow #3: Admin Marks Order Delivered', () => {
           address: '123 Test St',
           city: 'Ho Chi Minh',
         },
-        deliveryMethod: 'standard',
+        deliveryMethod: 'fast',
         paymentMethod: 'COD',
       }),
     });
