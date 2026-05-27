@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
 
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
@@ -13,6 +14,7 @@ import { AdminOrdersController } from './admin-orders.controller';
 import { AdminOrdersService } from './admin-orders.service';
 import { AdminCommentsController } from './admin-comments.controller';
 import { AdminCommentsService } from './admin-comments.service';
+import { AdminOrdersGateway } from './admin-orders.gateway';
 import { Order } from '../order/entities/order.entity';
 import { Product } from '../catalog/entities/product.entity';
 import { User } from '../auth/entities/user.entity';
@@ -20,7 +22,10 @@ import { Category } from '../catalog/entities/category.entity';
 import { Review } from '../catalog/entities/review.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, Product, User, Category, Review])],
+  imports: [
+    TypeOrmModule.forFeature([Order, Product, User, Category, Review]),
+    JwtModule.register({}),
+  ],
   controllers: [
     AdminController,
     AdminUsersController,
@@ -36,7 +41,8 @@ import { Review } from '../catalog/entities/review.entity';
     AdminCategoriesService,
     AdminOrdersService,
     AdminCommentsService,
+    AdminOrdersGateway,
   ],
-  exports: [AdminService],
+  exports: [AdminService, AdminOrdersGateway],
 })
 export class AdminModule {}
